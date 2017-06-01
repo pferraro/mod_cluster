@@ -27,11 +27,13 @@ import org.jboss.modcluster.load.metric.LoadMetric;
 import org.jboss.modcluster.load.metric.NodeUnavailableException;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.same;
 import static org.mockito.Mockito.when;
 
 /**
@@ -41,14 +43,15 @@ public class DynamicLoadBalanceFactorProviderTest {
 
     @Test
     public void getLoadBalanceFactor() throws Exception {
-        Set<LoadMetric> metrics = new HashSet<>();
         LoadMetric metric = mock(LoadMetric.class);
-        when(metric.getLoad(mock(Engine.class))).thenThrow(new NodeUnavailableException());
-        metrics.add(metric);
-        DynamicLoadBalanceFactorProvider provider = new DynamicLoadBalanceFactorProvider(metrics);
+        Engine engine = mock(Engine.class);
 
-        int loadBalanceFactor = provider.getLoadBalanceFactor(mock(Engine.class));
+        when(metric.getWeight()).thenReturn(1);
+        when(metric.getLoad(same(engine))).thenThrow(new NodeUnavailableException());
+
+        DynamicLoadBalanceFactorProvider provider = new DynamicLoadBalanceFactorProvider(Collections.singleton(metric));
+
+        int loadBalanceFactor = provider.getLoadBalanceFactor(engine);
         assertEquals(-1, loadBalanceFactor);
     }
-
 }
